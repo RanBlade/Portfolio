@@ -28,68 +28,7 @@ std::set<UserAccount* , compareAccounts> ConnectedUserAccounts;
 
 extern void CreateDummyAccounts()
 {
-  UserAccount* t_account = new UserAccount;
-  t_account->m_passwrd = "greta";
-  t_account->m_userName = "TesterEric";
-  t_account->m_userID   = 750;
-  t_account->m_player->SetBalance(10000);
-  t_account->m_player->SetScore(1000);
-  allAccounts.insert(t_account);
-  
-  UserAccount* t_account1 = new UserAccount;
-  t_account1->m_passwrd = "berkeley";
-  t_account1->m_userName = "TesterJames";
-  t_account1->m_userID   = 990;
-  t_account1->m_player->SetBalance(10000);
-  t_account1->m_player->SetScore(1000);
-  allAccounts.insert(t_account1);
-  
-  UserAccount* t_account2 = new UserAccount;
-  t_account2->m_passwrd = "trader1";
-  t_account2->m_userName = "TesterRace";
-  t_account2->m_userID   = 300;
-  t_account2->m_player->SetBalance(10000);
-  t_account2->m_player->SetScore(1000);
-  allAccounts.insert(t_account2);
-  
-    UserAccount* t_account3 = new UserAccount;
-  t_account3->m_passwrd = "trader44";
-  t_account3->m_userName = "TesterRae";
-  t_account3->m_userID   = 400;
-  t_account3->m_player->SetBalance(10000);
-  t_account3->m_player->SetScore(1000);
-  allAccounts.insert(t_account3);
-  
-    UserAccount* t_account4 = new UserAccount;
-  t_account4->m_passwrd = "trader55";
-  t_account4->m_userName = "TesterRicky";
-  t_account4->m_userID   = 600;
-  t_account4->m_player->SetBalance(10000);
-  t_account4->m_player->SetScore(1000);
-  allAccounts.insert(t_account4);
-  
-    UserAccount* t_account5 = new UserAccount;
-  t_account5->m_passwrd = "trader66";
-  t_account5->m_userName = "TesterJohn";
-  t_account5->m_userID   = 500;
-  t_account5->m_player->SetBalance(10000);
-  t_account5->m_player->SetScore(1000);
-  allAccounts.insert(t_account5);
-  
-  for(int i = 0 , y = 5; i < 40 ; i++ , y++)
-  {
-    UserAccount* t_account12 = new UserAccount;
-	std::stringstream t_uname , t_pwd;
-	t_uname << "cojones" << i;
-	t_pwd << "tester" << y;
-    t_account12->m_passwrd = t_pwd.str();
-    t_account12->m_userName = t_uname.str() ;
-    t_account12->m_userID   = y;
-    t_account12->m_player->SetBalance(10000);
-    t_account12->m_player->SetScore(1000);
-    allAccounts.insert(t_account12);
-   // y++;
-  }
+  //removed unessasary code block
 }
 
 extern UserAccount* GetAccount(std::string t_name)
