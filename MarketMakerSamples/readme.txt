@@ -4,8 +4,12 @@ Ok so this project was suppose to be my big break into the software development 
 
 We were making a game to be released across all mobile devices and all browsers. I can't go into too many details on what the game did.
 
-The tech we decided to go with for the front end was socket.io and node.js. I wrote all the socket.io code on the client and delivered in a format for the client programmer to be able to create the webpage without any knowlege of the network infastructure going on. After that I wrote a node.js/socket.io server to act as a middle man server between the client browser and the backend game server. This middle man server took messages from the client through a socket.io connection and then (using node.js) created a socket connection to a backend server. The backend game server was written completly in C++ and handledd all processing.
+The code for the backend server has only included the code that will show the connection to the middle man connection. It is not a complete code listing. I wanted to mainly show the connection between the two servers.
 
+The javascript server has two connections.. a socket.io that services all the clients and the node.js sockets connection to connect to the backend using typical sockets. This source code is a full listing of the server.
 
+The front end code is only one javascript file and shows the code I wrote to let the client programmer interface the client with the information that was being sent to the client from the server.
 
-Disclaimer: This was a prototype version 1 to prove teh concept could work. It did work and it worked well but it was thrown together as fast as possible so there will yet again be very little commenting and very rushed code. This was all going to be re-written if we had decided to move forward with the game.
+Disclaimer: This code is not clean due to it being a prototype and a very tight schedule to complete it. It was only to prove functinality of the concept and if we had decided to move forward it would have been refactored and been cleaned up. The concept did work and it was stable, for whatever reason they decided to not continue the project with me. 
+
+Disclaimer2: The backend server also uses a low end network lib created by my uncle which I have not included the code for because I did not write it. 
