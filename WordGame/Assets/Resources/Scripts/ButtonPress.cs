@@ -32,6 +32,7 @@ public class ButtonPress : MonoBehaviour {
 
 	public void Click()
 	{
+		Debug.Log("Button Clicked");
 		if(activeElement)
 		{
 			if(inputFieldRef.text.Length != 0)
