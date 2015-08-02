@@ -40,6 +40,7 @@ public class gameState : MonoBehaviour {
 		playerGuessed = false;
 		guessCount = 0;
 		currentWord = GetComponent<WordLib>().GetWord();
+		SetHiddenWord ();
 
 
 		Debug.Log ("CurrentWord: " + currentWord.word + " Size: " + currentWord.GetWordSize());
@@ -272,11 +273,33 @@ public class gameState : MonoBehaviour {
 	}
 	private void RightGuess(char correctGuess)
 	{
-
+		guessedLetters.Add (correctGuess);
+		ShowHiddenLetter (correctGuess);
 	}
 	private void WrongGuess(char incorrectGuess)
 	{
 		guessedLetters.Add(incorrectGuess);
+	}
+	private void SetHiddenWord()
+	{
+		foreach (char c in currentWord.word) {
+			hiddenWord+= "_";
+		}
+	}
+	private void ShowHiddenLetter(char guessedLetter)
+	{
+		int stringIndex = 0;
+		char[] tempArray = hiddenWord.ToCharArray ();
+		foreach (char c in currentWord.word) {
+			Debug.Log ("c: " + c + " guessedLetter: " + guessedLetter);
+			if(c == guessedLetter || guessedLetter == char.ToLower(c))
+			{
+				Debug.Log ("Found match " + c);
+				tempArray[stringIndex] = c;
+			}
+			stringIndex++;
+		}
+		hiddenWord = new string (tempArray);
 	}
 
 	/*Function: StartNewGame
