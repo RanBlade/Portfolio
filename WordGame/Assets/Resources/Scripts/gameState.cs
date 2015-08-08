@@ -9,9 +9,30 @@ using UtilityScripts;
 
 
 public class gameState : MonoBehaviour {
-	
-	//Private state variables of the game
-	private int guessCount; 
+
+
+	//enum for game states
+	enum MainStates
+	{
+		menu,
+		playing,
+		quit,
+		pause,
+		loading
+	}
+	enum PlayingStates
+	{
+		playerTurn,
+		win,
+		loss,
+		newGame,
+		mainMenu
+	}
+
+	//game counters
+	private int roundCount, guessCount, wrongGuessCount, gameScore;
+
+	//game true/false conditions
 	private bool playerGuessed;
 	private bool pickWord;
 
@@ -25,11 +46,17 @@ public class gameState : MonoBehaviour {
 	//stored list of the gameblocks for the image
 	private List<GameObject> gameImageBlocks;
 	private Texture gameImage;
+
+	//current States
+	private MainStates currentMstate;
+	private PlayingStates currentGstate;
 	
 
 	// Use this for initialization
 	void Start () {
-
+		//fix this after testing to proper start states
+		currentMstate = MainStates.playing;
+		currentGstate = PlayingStates.newGame;
 		//create memory for the gamestate containeers
 		gameImageBlocks = new List<GameObject>();
 		guessedLetters = new List<char>();
@@ -39,6 +66,9 @@ public class gameState : MonoBehaviour {
 		pickWord = true;
 		playerGuessed = false;
 		guessCount = 0;
+		wrongGuessCount = 0;
+		roundCount = 0;
+		gameScore = 0;
 		currentWord = GetComponent<WordLib>().GetWord();
 		SetHiddenWord ();
 
@@ -54,11 +84,40 @@ public class gameState : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(playerGuessed)
-		{
-			ConvertGuessedLettersToString();
-
-			playerGuessed = false;
+		switch (currentMstate) {
+		
+		case MainStates.menu:
+			{
+			break;
+			}
+		case MainStates.loading:
+			{
+			break;
+			}
+		case MainStates.playing:
+			{
+				switch(currentGstate)
+				{
+				case PlayingStates.playerTurn:
+				{
+					if (playerGuessed) {
+						ConvertGuessedLettersToString ();
+					
+						playerGuessed = false;
+					}
+				break;
+				}
+				}
+			break;
+			}
+		case MainStates.pause:
+			{
+			break;
+			}
+		case MainStates.quit:
+			{
+			break;
+			}
 		}
 
 	}
@@ -132,6 +191,11 @@ public class gameState : MonoBehaviour {
 		{
 			a.SetActive(toggle);
 		}
+	}
+	void ShowGameImageOnWrongGuess()
+	{
+		gameImageBlocks[wrongGuessCount].SetActive(true);
+		wrongGuessCount++;
 	}
 
 	//Loads the texture onto the game blocks
@@ -278,7 +342,9 @@ public class gameState : MonoBehaviour {
 	}
 	private void WrongGuess(char incorrectGuess)
 	{
+		ShowGameImageOnWrongGuess ();
 		guessedLetters.Add(incorrectGuess);
+
 	}
 	private void SetHiddenWord()
 	{
