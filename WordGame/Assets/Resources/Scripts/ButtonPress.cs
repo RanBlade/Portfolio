@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
+
 public class ButtonPress : MonoBehaviour {
 
 	public InputField inputFieldRef;
@@ -41,5 +42,22 @@ public class ButtonPress : MonoBehaviour {
 				gameStateRef.Guess(tempChar);
 			}
 		}
+	}
+	public void ClickQuit()
+	{
+		Debug.Log("Quiting Application");
+		gameStateRef.QuitGame();
+	}
+	public void ClickPlayAgain()
+	{
+		gameStateRef.PlayAgain();
+	}
+	public void ClickLeaderBoard()
+	{
+		gameStateRef.ShowLeaderBoard();
+	}
+	public void ClickNewGame()
+	{
+		gameStateRef.PlayerNewGame();
 	}
 }
