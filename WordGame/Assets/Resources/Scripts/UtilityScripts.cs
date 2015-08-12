@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
+
 using System.Collections;
-
-
+using System.Collections.Generic;
 
 namespace UtilityScripts {
 
@@ -24,4 +24,17 @@ namespace UtilityScripts {
 		}
 		
 	}
+	[System.Serializable]
+	public class LeaderBoardEntry
+	{
+		public string name;
+		public int    score;
+
+		public LeaderBoardEntry()
+		{
+			name = null;
+			score = 0;
+		}
+	}
+
 }

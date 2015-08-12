@@ -1,16 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+using System;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.IO;
 
 using UtilityScripts;
 
 public class gameState : MonoBehaviour {
-
 	//enum for game states
-	enum MainStates
+	public enum MainStates
 	{
 		menu,
 		playing,
@@ -24,52 +26,81 @@ public class gameState : MonoBehaviour {
 		win,
 		loss,
 		newGame,
+		HighScore,
 		mainMenu
+	}
+	enum newGameType
+	{
+		newGame,
+		winGame,
+		LoseGame
+	}
+	enum PlayAgainFlag
+	{
+		yes,
+		no,
+		notSelected
 	}
 
 	//game counters
-	private int roundCount, guessCount, wrongGuessCount, gameScore;
+	//private int roundCount, guessCount;
+	private int wrongGuessCount, gameScore;
+	private const int highScoreMAX = 10;
 
 	//game true/false conditions
 	private bool playerGuessed;
-	private bool pickWord;
+	//private bool pickWord;
 	private bool enterState;
-	private bool playAgain;
+	private PlayAgainFlag playAgain;
 
 	// word variables for the game state
-	private char guessedLetter;
-	private List<char> guessedLetters;
-	private string formattedGuessedLetters;
-	private string hiddenWord;
+	private char         guessedLetter;
+	private List<char>   guessedLetters;
+	private string       formattedGuessedLetters;
+	private string       formmatedHighScore;
+	private string       hiddenWord;
 	private WordLibEntry currentWord;
 
 	//stored list of the gameblocks for the image
 	private List<GameObject> gameImageBlocks;
-	private Texture gameImage;
+	private Texture          gameImage;
 
 	//current States
-	private MainStates currentMstate;
+	private MainStates    currentMstate;
 	private PlayingStates currentGstate;
+	private newGameType   gameType;
 
+	//scpre board list
+	public List<LeaderBoardEntry> highScores;
+	bool highScoreNameEntered;
+	string highScoreName;
 
 	// Use this for initialization
 	void Start () {
 		//fix this after testing to proper start states
-		currentMstate = MainStates.playing;
+		currentMstate = MainStates.menu;
 		currentGstate = PlayingStates.playerTurn;
 
 		//create memory for the gamestate containeers
 		gameImageBlocks = new List<GameObject>();
 		guessedLetters = new List<char>();
 		currentWord = new WordLibEntry();
+		highScores = new List<LeaderBoardEntry>();
+
+		LoadHighScores();
+		FormatHighScore();
 
 		CreateGameImage();
 		LoadGameImage();
+		SetGameImageActive(false);
 
 		enterState = false;
-		playAgain = false;
+		playAgain = PlayAgainFlag.notSelected;
+		gameType = newGameType.newGame;
 
-		SwitchPlayingState(PlayingStates.newGame);
+		SwitchMainState(MainStates.menu);
+		//SwitchPlayingState(PlayingStates.newGame);
+
 	
 	}
 	
@@ -79,6 +110,13 @@ public class gameState : MonoBehaviour {
 		
 		case MainStates.menu:
 		{
+			if(enterState)
+			{
+				HideGameUI();
+				SetGameImageActive(false);
+				//FormatHighScore();
+				enterState = false;
+			}
 			break;
 		}
 		case MainStates.loading:
@@ -126,11 +164,26 @@ public class gameState : MonoBehaviour {
 					Debug.Log ("YOU WIN!!! CONGRATS!");
 					enterState = false;
 				}
-				if(playAgain)
+				if(playAgain == PlayAgainFlag.yes)
 				{
 					SwitchPlayingState(PlayingStates.newGame);
+					gameType = newGameType.winGame;
 					ToggleWinUI();
-					playAgain = false;
+					playAgain = PlayAgainFlag.notSelected;
+				}
+				else if(playAgain == PlayAgainFlag.no)
+				{
+					if(CheckHighScore(gameScore))
+					{
+						ToggleWinUI ();
+						SwitchPlayingState(PlayingStates.HighScore);
+					}
+					else
+					{
+						ToggleWinUI ();
+						SwitchMainState(MainStates.menu);
+					}
+					playAgain = PlayAgainFlag.notSelected;
 				}
 				break;
 			}
@@ -143,11 +196,48 @@ public class gameState : MonoBehaviour {
 					Debug.Log ("You Lose! Sorry try again");
 					enterState = false;
 				}
-				if(playAgain)
+				if(playAgain == PlayAgainFlag.yes)
 				{
 					SwitchPlayingState(PlayingStates.newGame);
+					gameType = newGameType.LoseGame;
 					ToggleLossUI();
-					playAgain = false;
+					playAgain = PlayAgainFlag.notSelected;
+				}
+				else if(playAgain == PlayAgainFlag.no)
+				{
+					if(CheckHighScore(gameScore))
+					{
+						ToggleLossUI ();
+						SwitchPlayingState(PlayingStates.HighScore);
+					}
+					else
+					{
+						ToggleLossUI ();
+						SwitchMainState(MainStates.menu);
+					}
+					playAgain = PlayAgainFlag.notSelected;
+				}
+				break;
+			}
+			case PlayingStates.HighScore:
+			{
+
+				if(enterState)
+				{
+					Debug.Log ("ENTER YOUR HIGH SCORE YOU BADASS!");
+					ToggleEnterNameUI();
+					highScoreNameEntered = false;
+					highScoreName = null;
+					enterState = false;
+
+				}
+				if(highScoreNameEntered)
+				{
+					ToggleEnterNameUI();
+					UpdateHighScoreList(highScoreName, gameScore);
+					FormatHighScore();
+					SwitchMainState(MainStates.menu);
+					//GetHighScoreList();
 				}
 				break;
 			}
@@ -195,7 +285,27 @@ public class gameState : MonoBehaviour {
 	{
 		return gameScore;
 	}
-
+	public void ShowLeaderBoard()
+	{
+		ToggleLeaderBoardUI();
+	}
+	public void CloseLeaderBoard()
+	{
+		ToggleLeaderBoardUI();
+	}
+	/*
+	public List<LeaderBoardEntry> GetHighScoreList()
+	{
+		foreach(LeaderBoardEntry a in highScores)
+		{
+			Debug.Log ("Name: " + a.name + " -- Score: " + a.score + " !!!!");
+		}
+		return highScores;
+	}*/
+	public string GetFormattedLeaderBoard()
+	{
+		return formmatedHighScore;
+	}
 	/*Name: Guess
 	 *Purpose: To handle what the game does when a player hits the Guess button
 	 *
@@ -227,15 +337,26 @@ public class gameState : MonoBehaviour {
 		Application.Quit();
 	}
 
-	public void PlayAgain()
+	public void PlayAgain(bool shallWePlayAgain)
 	{
-		playAgain = true;
+		if(shallWePlayAgain)
+			playAgain = PlayAgainFlag.yes;
+		else if(!shallWePlayAgain)
+			playAgain = PlayAgainFlag.no;
+		else
+			playAgain = PlayAgainFlag.notSelected;
 	}
 	public void PlayerNewGame()
 	{
+		SwitchMainState(MainStates.playing);
+		SwitchPlayingState(PlayingStates.newGame);
+		gameType = newGameType.newGame;
 	}
-	public void ShowLeaderBoard()
+	public void EnterName(string name)
 	{
+		Debug.Log ("Name entered: " + name);
+		highScoreName = name;
+		highScoreNameEntered = true;
 	}
 	//======================================================================================================================================================================================
 	//-----------------------------------------------------------------------------Private Functions for the gameState----------------------------------------------------------------------
@@ -376,12 +497,13 @@ public class gameState : MonoBehaviour {
 	 */
 	private void StartNewGame()
 	{
-		pickWord = true;
+		//pickWord = true;
 		playerGuessed = false;
-		guessCount = 0;
+		//guessCount = 0;
 		wrongGuessCount = 0;
-		roundCount = 0;
-		gameScore = 0;
+		//roundCount = 0;
+		if(gameType == newGameType.newGame || gameType == newGameType.LoseGame)
+			gameScore = 0;
 
 		currentWord = GetComponent<WordLib>().GetWord();
 		SetHiddenWord ();
@@ -396,6 +518,8 @@ public class gameState : MonoBehaviour {
 		//Setup functions to setup initial gamestate or do testing
 		SetGameImage();
 		SetGameImageActive(false);
+		BrightenGameUI();
+
 	}
 
 	/*Function: SwitchPlayingState
@@ -591,6 +715,132 @@ public class gameState : MonoBehaviour {
 			ChangeScore(100);
 		}
 	}
+	/*Function: CheckHighScore
+	 * Purpose: to see if current endGame beat a high score
+	 * 
+	 * Arguments: none
+	 * 
+	 * Description: Iterate through the high score list and see if it beats a high score. if high score list is empty return true
+	 */
+	private bool CheckHighScore(int score)
+	{
+		if(highScores.Count == 0)
+			return true;
+		else
+		{
+			for(int i = 0; i < highScores.Count; i++)
+			{
+				if(score > highScores[i].score)
+				   return true;
+			}
+
+			return false;
+		}
+	}
+
+	/*Function: UpdateHighScoreList
+	 * Purpose: To add the new highscore list entry
+	 * 
+	 * Arguments: name - score
+	 * 
+	 * Description: Iterates through the high score list and updates the list of highscores with the new entry
+	 */
+	private void UpdateHighScoreList(string name, int score)
+	{
+		if(highScores.Count == highScoreMAX)
+			highScores.RemoveAt(highScoreMAX - 1);
+		LeaderBoardEntry tempEntry = new LeaderBoardEntry();
+		tempEntry.name = name;
+		tempEntry.score = score;
+
+		if(highScores.Count == 0)
+			highScores.Add(tempEntry);
+
+		for(int i = 0; i < highScores.Count; i++)
+		{
+			if(score > highScores[i].score)
+			{
+				highScores.Insert(i, tempEntry);
+				break;
+			}
+		}
+	}
+
+	/*Function: FormatHighScore
+	 * Purpose: to format a string for the UI to display highscore list
+	 * 
+	 * Arguments: none
+	 * 
+	 * Description: iterate through the highscore list and format it to a readable
+	 * 				string for the user UI of the leaderboard
+	 */
+	private void FormatHighScore()
+	{
+		int x = 1;
+		Debug.Log ("HighScores Count: " + highScores.Count);
+		if(highScores.Count == 0)
+			formmatedHighScore = "List is empty";
+		else{
+			const string format = "{0,-4} {1, -20} {2:0000000000}\n";
+			formmatedHighScore = string.Format("{0,-4} {1,-20} {2,5}\n\n", "Rank", "Name", "Score");
+			foreach( LeaderBoardEntry a in highScores)
+			{
+				formmatedHighScore += string.Format(format, x, a.name, a.score); 
+				/*string tempString = x +". " + a.name;
+				formmatedHighScore += tempString;
+				string whitespace = new string(' ' , 20 - tempString.Length);
+				formmatedHighScore += whitespace + a.score + "\n";
+				*/x++;
+			}
+		}
+	}
+
+	/*Function: LoadHighScores
+	 * Purpose: To load the highscore list when application starts
+	 * 
+	 * Arguments: none
+	 * 
+	 * Description: open a stream reader and read in the strings from highscore.txt and 
+	 * 				parse each line into 2 strings and pass it to the AddHighScoreEntry function
+	 */
+	private void LoadHighScores()
+	{
+		string line;
+		
+		StreamReader highScoreReader = new StreamReader("E:\\Users\\RanBlade\\Programming\\GitRepos\\Portfolio\\WordGame\\Assets\\HighScore.txt");
+		do
+		{
+			line = highScoreReader.ReadLine ();
+			if(line != null)
+			{
+				string[] highScoreEntry = line.Split (' ');
+				
+				if(highScoreEntry.Length > 0)
+					AddToHighScores(highScoreEntry);
+			}
+		}while(line != null);
+		
+		highScoreReader.Close();
+	}
+
+	/*Function: AddHighScores
+	 * Purpose: To take the strings laoded from file and input them into the highscore list.
+	 * 
+	 * Arguments: HighScoresEntry string array
+	 * 
+	 * Description: create a leaderboardEntry and then take the 2 strings from the string array argument and input string 1
+	 * 				into the name field of the LeaderboardEntry adn then convert the second string to a int and input that value
+	 * 				into the leaderboardEntry score field
+	 */
+	private void AddToHighScores(string[] highScoreEntry)
+	{
+		LeaderBoardEntry temp = new LeaderBoardEntry();
+		
+		temp.name = highScoreEntry[0];
+		temp.score = Int32.Parse(highScoreEntry[1]);
+		
+		highScores.Add (temp);
+	}
 
 	private void ToggleLossUI()
 	{
@@ -617,17 +867,46 @@ public class gameState : MonoBehaviour {
 			GameObject.Find("Win").GetComponent<CanvasGroup>().alpha = 0;
 		}
 	}
+
 	private void DimGameUI()
 	{
 		GameObject.Find ("GameControls").GetComponent<CanvasGroup>().alpha = .25f;
 	}
+
 	private void BrightenGameUI()
 	{
 		GameObject.Find ("GameControls").GetComponent<CanvasGroup>().alpha = 1;
 	}
+
 	private void HideGameUI()
 	{
 		GameObject.Find ("GameControls").GetComponent<CanvasGroup>().alpha = 0;
 	}
+
+	private void ToggleEnterNameUI()
+	{
+		float alpha = GameObject.Find("EnterName").GetComponent<CanvasGroup>().alpha;
+		if(alpha == 0)
+		{
+			GameObject.Find("EnterName").GetComponent<CanvasGroup>().alpha = 1;
+		}
+		else if(alpha == 1)
+		{
+			GameObject.Find("EnterName").GetComponent<CanvasGroup>().alpha = 0;
+		}
+	}
+	private void ToggleLeaderBoardUI()
+	{
+		float alpha = GameObject.Find("Leaderboard").GetComponent<CanvasGroup>().alpha;
+		if(alpha == 0)
+		{
+			GameObject.Find("Leaderboard").GetComponent<CanvasGroup>().alpha = 1;
+		}
+		else if(alpha == 1)
+		{
+			GameObject.Find("Leaderboard").GetComponent<CanvasGroup>().alpha = 0;
+		}
+	}
+
 
 }

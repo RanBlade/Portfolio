@@ -50,14 +50,27 @@ public class ButtonPress : MonoBehaviour {
 	}
 	public void ClickPlayAgain()
 	{
-		gameStateRef.PlayAgain();
+		gameStateRef.PlayAgain(true);
+	}
+	public void ClickPlayAgainNO()
+	{
+		gameStateRef.PlayAgain(false);
 	}
 	public void ClickLeaderBoard()
 	{
 		gameStateRef.ShowLeaderBoard();
 	}
+	public void ClickCloseLeaderBoard()
+	{
+		gameStateRef.CloseLeaderBoard();
+	}
 	public void ClickNewGame()
 	{
 		gameStateRef.PlayerNewGame();
+	}
+	public void ClickHighScoreNameDone()
+	{
+
+		gameStateRef.EnterName(inputFieldRef.text);
 	}
 }
