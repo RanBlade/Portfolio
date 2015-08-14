@@ -6,4 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Resources/Scenes/disclaimer.unity
+  - enabled: 1
+    path: Assets/Resources/Scenes/credits.unity
+  - enabled: 1
     path: Assets/Resources/Scenes/game.unity

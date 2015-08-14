@@ -42,6 +42,11 @@ public class gameState : MonoBehaviour {
 		notSelected
 	}
 
+	//score modifier constants
+	const int RIGHTGUESS = 15;
+	const int WRONGGUESS = -5;
+	const int WIN        = 100;
+	
 	//game counters
 	//private int roundCount, guessCount;
 	private int wrongGuessCount, gameScore;
@@ -87,9 +92,8 @@ public class gameState : MonoBehaviour {
 		currentWord = new WordLibEntry();
 		highScores = new List<LeaderBoardEntry>();
 
-		LoadHighScores();
-		FormatHighScore();
-
+		StartCoroutine(LoadHighScores());
+	
 		CreateGameImage();
 		LoadGameImage();
 		SetGameImageActive(false);
@@ -100,8 +104,7 @@ public class gameState : MonoBehaviour {
 
 		SwitchMainState(MainStates.menu);
 		//SwitchPlayingState(PlayingStates.newGame);
-
-	
+			
 	}
 	
 	// Update is called once per frame
@@ -236,6 +239,7 @@ public class gameState : MonoBehaviour {
 					ToggleEnterNameUI();
 					UpdateHighScoreList(highScoreName, gameScore);
 					FormatHighScore();
+					StartCoroutine(SaveHighScores());
 					SwitchMainState(MainStates.menu);
 					//GetHighScoreList();
 				}
@@ -269,54 +273,42 @@ public class gameState : MonoBehaviour {
 	{
 		return currentWord.word;
 	}
+
 	public int GetCurrentWordSize()
 	{
 		return currentWord.GetWordSize();
 	}
+
 	public string GetGuessedLetters()
 	{
 		return formattedGuessedLetters;
 	}
+
 	public string GetHiddenWord()
 	{
 		return hiddenWord;
 	}
+
 	public int GetScore()
 	{
 		return gameScore;
 	}
+
 	public void ShowLeaderBoard()
 	{
 		ToggleLeaderBoardUI();
 	}
+
 	public void CloseLeaderBoard()
 	{
 		ToggleLeaderBoardUI();
 	}
-	/*
-	public List<LeaderBoardEntry> GetHighScoreList()
-	{
-		foreach(LeaderBoardEntry a in highScores)
-		{
-			Debug.Log ("Name: " + a.name + " -- Score: " + a.score + " !!!!");
-		}
-		return highScores;
-	}*/
+
 	public string GetFormattedLeaderBoard()
 	{
 		return formmatedHighScore;
 	}
-	/*Name: Guess
-	 *Purpose: To handle what the game does when a player hits the Guess button
-	 *
-	 *Arguments: 
-	 *		char tempText: The input from the player of the letter they guessed
-	 *
-	 *Description: The fucntion takes the input tempText. It then test tempText to make sure it is a letter. 
-	 *				If it is a letter then it test tempText against the letters that have already been guessed
-	 *				if the letter has not been guessed. It will check the guess for being a right guess or wrong. 
-	 *				if it is wrong it will call the wrong guess fucntion and the right guess fucntion if it is right.
-	 */
+
 	public void Guess(char tempText)
 	{
 		Debug.Log ("Testing Click and Guess: " + tempText + "!!!");
@@ -324,14 +316,7 @@ public class gameState : MonoBehaviour {
 		playerGuessed = true;
 
 	}
-
-	/*Function: QuitGame
-	 * Purpose: to clean quit the game when the player presses Quit Game button
-	 * 
-	 * Arguments: none
-	 * 
-	 * Description: Clean up game elements and save any data that needs to be saved then quit the game
-	 */
+	
 	public void QuitGame()
 	{
 		Application.Quit();
@@ -346,18 +331,22 @@ public class gameState : MonoBehaviour {
 		else
 			playAgain = PlayAgainFlag.notSelected;
 	}
+
 	public void PlayerNewGame()
 	{
 		SwitchMainState(MainStates.playing);
 		SwitchPlayingState(PlayingStates.newGame);
 		gameType = newGameType.newGame;
 	}
+
 	public void EnterName(string name)
 	{
 		Debug.Log ("Name entered: " + name);
 		highScoreName = name;
 		highScoreNameEntered = true;
 	}
+
+
 	//======================================================================================================================================================================================
 	//-----------------------------------------------------------------------------Private Functions for the gameState----------------------------------------------------------------------
 	//======================================================================================================================================================================================
@@ -445,23 +434,57 @@ public class gameState : MonoBehaviour {
 		Debug.Log ("Wrong Guess");
 		return false;
 	}
+
+	/*Function: RightGuess
+	 * Purpose: To handle the logic if the player makes a correct guess
+	 * 
+	 * Arguments: correctGuess
+	 * 
+	 * Description: Show the hidden letter of the correctGuess. Add the letter to the guessed letter string
+	 * 				and increment the score
+	 */
 	private void RightGuess(char correctGuess)
 	{
 		guessedLetters.Add (correctGuess);
 		ShowHiddenLetter (correctGuess);
-		ChangeScore(15);
+		ChangeScore(RIGHTGUESS);
 	}
+
+	/*Function: WrongGuess
+	 * Purpose: To handle the logic if hte player makes wrong guess
+	 * 
+	 * Arguments: inccorectGuess
+	 * 
+	 * Description: Add the incorrectGuess to the guessed letters string. Modify the score
+	 * 				and make a game image clue appear
+	 */
 	private void WrongGuess(char incorrectGuess)
 	{
 		ShowGameImageOnWrongGuess ();
 		guessedLetters.Add(incorrectGuess);
-		ChangeScore(-5);
+		ChangeScore(WRONGGUESS);
 
 	}
-	private void ChangeScore(int score)
+
+	/*Function: ChangeScore
+	 * Purpose: To increment the score
+	 * 
+	 * Arguments: scoreModifer
+	 * 
+	 * Description: Increment the game score by the provided value
+	 */
+	private void ChangeScore(int scoreModifer)
 	{
-		gameScore+=score;
+		gameScore+=scoreModifer;
 	}
+
+	/*Function: SetHiddenWord
+	 * Purpose: To create a hidden word string to show the player on the game screen
+	 * 
+	 * Arguments: none
+	 * 
+	 * Description: iterate through the currentWord and create a string of "_" to match the length of the word
+	 */
 	private void SetHiddenWord()
 	{
 		hiddenWord = null;
@@ -469,6 +492,15 @@ public class gameState : MonoBehaviour {
 			hiddenWord+= "_";
 		}
 	}
+
+	/*Function: ShowHiddenLetter
+	 * Purpose: To show the letter on the hidden word when a correct guess happens
+	 * 
+	 * Arguments: guessedLetter
+	 * 
+	 * Description: Iterate through the game word. Once the match is found replace the hidden letter with the
+	 * 				guessed letter
+	 */
 	private void ShowHiddenLetter(char guessedLetter)
 	{
 		int stringIndex = 0;
@@ -712,7 +744,7 @@ public class gameState : MonoBehaviour {
 		else if( currentWord.word == hiddenWord)
 		{
 			SwitchPlayingState(PlayingStates.win);
-			ChangeScore(100);
+			ChangeScore(WIN);
 		}
 	}
 	/*Function: CheckHighScore
@@ -803,24 +835,100 @@ public class gameState : MonoBehaviour {
 	 * Description: open a stream reader and read in the strings from highscore.txt and 
 	 * 				parse each line into 2 strings and pass it to the AddHighScoreEntry function
 	 */
-	private void LoadHighScores()
+	private IEnumerator LoadHighScores()
 	{
 		string line;
-		
-		StreamReader highScoreReader = new StreamReader("E:\\Users\\RanBlade\\Programming\\GitRepos\\Portfolio\\WordGame\\Assets\\HighScore.txt");
-		do
+		string filename = Application.dataPath + "/HighScore.txt";
+		WWW www;
+
+		Debug.Log ("Platform: " + Application.platform);
+		Debug.Log ("Entering LoadHighScores()");
+
+		if(Application.platform.ToString() == "WebGLPlayer")
 		{
-			line = highScoreReader.ReadLine ();
-			if(line != null)
+			www = new WWW(filename);
+			yield return www;
+
+			string highScoreString = www.text;
+
+			Debug.Log (highScoreString);
+
+			using( StringReader wwwHighScoreReader = new StringReader(highScoreString))
 			{
-				string[] highScoreEntry = line.Split (' ');
-				
-				if(highScoreEntry.Length > 0)
-					AddToHighScores(highScoreEntry);
+				do{
+					line = wwwHighScoreReader.ReadLine();
+					Debug.Log ("Current line: " + line + "-- length: " + line.Length);
+					if(line!=null)
+					{
+						string[] higScoreEntry = line.Split(' ');
+						if(higScoreEntry.Length > 0)
+							AddToHighScores(higScoreEntry);
+					}
+				}while(line!=null);
 			}
-		}while(line != null);
-		
-		highScoreReader.Close();
+			FormatHighScore();
+		}
+		else{
+
+			Debug.Log(filename);
+			StreamReader highScoreReader = new StreamReader(filename);
+			do
+			{
+				line = highScoreReader.ReadLine ();
+				if(line != null)
+				{
+					string[] highScoreEntry = line.Split (' ');
+					
+					if(highScoreEntry.Length > 0)
+						AddToHighScores(highScoreEntry);
+				}
+			}while(line != null);
+			
+			highScoreReader.Close();
+			FormatHighScore();
+		}
+				
+	}
+	
+	/*Function: SaveHighScores
+	 * Purprose: TO save the high score list to be loaded the next time the game is played
+	 * 
+	 * Arguments: none
+	 * 
+	 * Description: Open a streamwriter and then pull all the data from the high score list and write it to a file
+	 */
+	private IEnumerator SaveHighScores()
+	{
+		string filename = Application.dataPath;
+
+		if(Application.platform.ToString() == "WebGLPlayer")
+		{
+			string sendString = "\n";
+
+			foreach(LeaderBoardEntry a in highScores)
+			{
+				sendString += a.name + " " + a.score.ToString () + "%0D%0A";
+			}
+
+			Debug.Log (sendString);
+			WWW uploader = new WWW(filename + "/WriteScript.php?txt=" + sendString);
+			yield return uploader;
+			Debug.Log ("Finished uploading High Scores");
+
+		}
+		else
+		{ 
+			using(StreamWriter highScoreWriter = new StreamWriter(filename + "/HighScore.txt"))
+			{
+				
+				foreach(LeaderBoardEntry a in highScores)
+				{
+					highScoreWriter.WriteLine (a.name + " " + a.score.ToString());
+				}
+			}
+		}
+
+
 	}
 
 	/*Function: AddHighScores
@@ -841,6 +949,10 @@ public class gameState : MonoBehaviour {
 		
 		highScores.Add (temp);
 	}
+
+	//=====================================================================================================================================
+	//---------------------------------------------- UI Visibility control functions ------------------------------------------------------
+	//=====================================================================================================================================
 
 	private void ToggleLossUI()
 	{
