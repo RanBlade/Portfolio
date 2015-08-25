@@ -13,6 +13,6 @@ public class GuessedLetterBox : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		guessedLettersRef.text = GetComponentInParent<UIRefrences>().gameStateRefUI.GetGuessedLetters();
+        guessedLettersRef.text = GetComponentInParent<UIRefrences>().gameStateRefUI.GetGuessedLetters();
 	}
 }

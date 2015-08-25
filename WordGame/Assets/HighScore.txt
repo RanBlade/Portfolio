@@ -3,8 +3,7 @@ Kaelob 895
 princess 665
 unicorn 365
 DAD 185
+a 180
+b 175
 a 155
-DAD 140
-EHR 0
-EHR 0
-EHR 0
+ear 155
